@@ -1,0 +1,170 @@
+
+build/bradfx.elf:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+20017840 <_text_start>:
+20017840:	4770      	bx	lr
+
+20017842 <_hook_resume>:
+20017842:	4770      	bx	lr
+20017844:	4770      	bx	lr
+
+20017846 <_hook_suspend>:
+20017846:	4770      	bx	lr
+20017848:	4770      	bx	lr
+
+2001784a <_entry>:
+2001784a:	4b10      	ldr	r3, [pc, #64]	; (2001788c <_entry+0x42>)
+2001784c:	4a10      	ldr	r2, [pc, #64]	; (20017890 <_entry+0x46>)
+2001784e:	e92d 41f0 	stmdb	sp!, {r4, r5, r6, r7, r8, lr}
+20017852:	4688      	mov	r8, r1
+20017854:	4607      	mov	r7, r0
+20017856:	2100      	movs	r1, #0
+20017858:	4293      	cmp	r3, r2
+2001785a:	d002      	beq.n	20017862 <_entry+0x18>
+2001785c:	f803 1f01 	strb.w	r1, [r3, #1]!
+20017860:	e7fa      	b.n	20017858 <_entry+0xe>
+20017862:	4b0c      	ldr	r3, [pc, #48]	; (20017894 <_entry+0x4a>)
+20017864:	4c0c      	ldr	r4, [pc, #48]	; (20017898 <_entry+0x4e>)
+20017866:	1ae4      	subs	r4, r4, r3
+20017868:	10a4      	asrs	r4, r4, #2
+2001786a:	2500      	movs	r5, #0
+2001786c:	461e      	mov	r6, r3
+2001786e:	42a5      	cmp	r5, r4
+20017870:	d005      	beq.n	2001787e <_entry+0x34>
+20017872:	f856 3025 	ldr.w	r3, [r6, r5, lsl #2]
+20017876:	b103      	cbz	r3, 2001787a <_entry+0x30>
+20017878:	4798      	blx	r3
+2001787a:	3501      	adds	r5, #1
+2001787c:	e7f7      	b.n	2001786e <_entry+0x24>
+2001787e:	4641      	mov	r1, r8
+20017880:	4638      	mov	r0, r7
+20017882:	f000 f80b 	bl	2001789c <_hook_init>
+20017886:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
+2001788a:	bf00      	nop
+2001788c:	20017937 	.word	0x20017937
+20017890:	20017937 	.word	0x20017937
+20017894:	20017840 	.word	0x20017840
+20017898:	20017840 	.word	0x20017840
+
+2001789c <_hook_init>:
+    return clipminmaxf(-lim, x, lim);
+}
+
+void MODFX_INIT(uint32_t platform, uint32_t api)
+{
+    distamt = 1.f;
+2001789c:	4b02      	ldr	r3, [pc, #8]	; (200178a8 <_hook_init+0xc>)
+2001789e:	f04f 527e 	mov.w	r2, #1065353216	; 0x3f800000
+200178a2:	601a      	str	r2, [r3, #0]
+200178a4:	4770      	bx	lr
+200178a6:	bf00      	nop
+200178a8:	20017930 	.word	0x20017930
+
+200178ac <_hook_process>:
+ const float *main_yn_e = yn + 2 * frames;
+
+ for (; yn < main_yn_e;)
+  {
+    // Distortion algorithm
+    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
+200178ac:	4a17      	ldr	r2, [pc, #92]	; (2001790c <_hook_process+0x60>)
+                   uint32_t frames)
+{
+  // Effect processing loop
+ 
+ float base_main;
+ const float *main_yn_e = yn + 2 * frames;
+200178ae:	9b00      	ldr	r3, [sp, #0]
+
+/** FSEL construct
+ */
+static inline __attribute__((optimize("Ofast"),always_inline))
+float fsel(const float a, const float b, const float c) {
+  return (a >= 0) ? b : c;
+200178b0:	ed9f 7a17 	vldr	s14, [pc, #92]	; 20017910 <_hook_process+0x64>
+
+ for (; yn < main_yn_e;)
+  {
+    // Distortion algorithm
+    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
+200178b4:	ed92 4a00 	vldr	s8, [r2]
+200178b8:	eddf 5a16 	vldr	s11, [pc, #88]	; 20017914 <_hook_process+0x68>
+                   uint32_t frames)
+{
+  // Effect processing loop
+ 
+ float base_main;
+ const float *main_yn_e = yn + 2 * frames;
+200178bc:	eb01 03c3 	add.w	r3, r1, r3, lsl #3
+
+ for (; yn < main_yn_e;)
+  {
+    // Distortion algorithm
+    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
+200178c0:	eef2 4a04 	vmov.f32	s9, #36	; 0x41200000  10.0
+200178c4:	eeb7 5a00 	vmov.f32	s10, #112	; 0x3f800000  1.0
+200178c8:	eeb0 6a47 	vmov.f32	s12, s14
+  // Effect processing loop
+ 
+ float base_main;
+ const float *main_yn_e = yn + 2 * frames;
+
+ for (; yn < main_yn_e;)
+200178cc:	428b      	cmp	r3, r1
+200178ce:	d91c      	bls.n	2001790a <_hook_process+0x5e>
+  {
+    // Distortion algorithm
+    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
+200178d0:	eef0 7a45 	vmov.f32	s15, s10
+200178d4:	eee4 7a24 	vfma.f32	s15, s8, s9
+200178d8:	ecf0 6a01 	vldmia	r0!, {s13}
+200178dc:	ee67 7aa6 	vmul.f32	s15, s15, s13
+200178e0:	ee77 6a87 	vadd.f32	s13, s15, s14
+200178e4:	eef5 6ac0 	vcmpe.f32	s13, #0.0
+200178e8:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+200178ec:	bfb8      	it	lt
+200178ee:	eef0 7a65 	vmovlt.f32	s15, s11
+200178f2:	ee77 6ac6 	vsub.f32	s13, s15, s12
+200178f6:	eef5 6a40 	vcmp.f32	s13, #0.0
+200178fa:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+200178fe:	bfa8      	it	ge
+20017900:	eef0 7a47 	vmovge.f32	s15, s14
+
+    *yn++ = hardclip(base_main, 0.15f);
+20017904:	ece1 7a01 	vstmia	r1!, {s15}
+  // Effect processing loop
+ 
+ float base_main;
+ const float *main_yn_e = yn + 2 * frames;
+
+ for (; yn < main_yn_e;)
+20017908:	e7e0      	b.n	200178cc <_hook_process+0x20>
+2001790a:	4770      	bx	lr
+2001790c:	20017930 	.word	0x20017930
+20017910:	3e19999a 	.word	0x3e19999a
+20017914:	be19999a 	.word	0xbe19999a
+
+20017918 <_hook_param>:
+    *yn++ = hardclip(base_main, 0.15f);
+  }
+}
+
+void MODFX_PARAM(uint8_t index, int32_t value)
+{
+20017918:	ee07 1a90 	vmov	s15, r1
+  //Convert fixed-point q31 format to float
+  const float valf = q31_to_f32(value);
+  switch (index)
+2001791c:	b920      	cbnz	r0, 20017928 <_hook_param+0x10>
+  {
+    case 0:
+      distamt = valf;
+2001791e:	eefa 7ae0 	vcvt.f32.s32	s15, s15, #31
+20017922:	4b02      	ldr	r3, [pc, #8]	; (2001792c <_hook_param+0x14>)
+20017924:	edc3 7a00 	vstr	s15, [r3]
+20017928:	4770      	bx	lr
+2001792a:	bf00      	nop
+2001792c:	20017930 	.word	0x20017930

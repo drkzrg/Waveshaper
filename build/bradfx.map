@@ -1,0 +1,214 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+SRAM             0x20017800         0x00001800         xr
+SDRAM            0xc0400000         0x00020000         rw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD ./build/obj/_unit.o
+LOAD ./build/obj/waveshaper.o
+
+.hooks          0x20017800       0x40
+                0x20017800                . = ALIGN (0x4)
+                0x20017800                _hooks_start = .
+ *(.hooks)
+ .hooks         0x20017800       0x40 ./build/obj/_unit.o
+                0x20017840                . = ALIGN (0x4)
+                0x20017840                _hooks_end = .
+
+.init_array     0x20017840        0x0
+                0x20017840                . = ALIGN (0x4)
+                0x20017840                PROVIDE (__init_array_start, .)
+ *(SORT(.init_array.*))
+ *(.init_array*)
+                0x20017840                . = ALIGN (0x4)
+                0x20017840                PROVIDE (__init_array_end, .)
+
+.text           0x20017840       0xf0
+                0x20017840                . = ALIGN (0x4)
+                0x20017840                _text_start = .
+ *(.text)
+ .text          0x20017840       0x5c ./build/obj/_unit.o
+                0x20017842                _hook_resume
+                0x20017846                _hook_suspend
+                0x2001784a                _entry
+ .text          0x2001789c       0x94 ./build/obj/waveshaper.o
+                0x2001789c                _hook_init
+                0x200178ac                _hook_process
+                0x20017918                _hook_param
+ *(.text.*)
+ *(.glue_7)
+ .glue_7        0x20017930        0x0 linker stubs
+ *(.glue_7t)
+ .glue_7t       0x20017930        0x0 linker stubs
+ *(.gcc*)
+                0x20017930                . = ALIGN (0x4)
+                0x20017930                _text_end = .
+
+.vfp11_veneer   0x20017930        0x0
+ .vfp11_veneer  0x20017930        0x0 linker stubs
+
+.v4_bx          0x20017930        0x0
+ .v4_bx         0x20017930        0x0 linker stubs
+
+.iplt           0x20017930        0x0
+ .iplt          0x20017930        0x0 ./build/obj/_unit.o
+
+.rel.dyn        0x20017930        0x0
+ .rel.iplt      0x20017930        0x0 ./build/obj/_unit.o
+
+.rodata         0x20017930        0x0
+                0x20017930                . = ALIGN (0x4)
+                0x20017930                _rodata_start = .
+ *(.rodata)
+ *(.rodata.*)
+                0x20017930                . = ALIGN (0x4)
+                0x20017930                _rodata_end = .
+
+.data           0x20017930        0x8
+                0x20017930                . = ALIGN (0x8)
+                0x20017930                _data_start = .
+ *(.data)
+ .data          0x20017930        0x0 ./build/obj/_unit.o
+ .data          0x20017930        0x4 ./build/obj/waveshaper.o
+ *(.data.*)
+                0x20017938                . = ALIGN (0x8)
+ *fill*         0x20017934        0x4 
+                0x20017938                _data_end = .
+
+.igot.plt       0x20017938        0x0
+ .igot.plt      0x20017938        0x0 ./build/obj/_unit.o
+
+.bss            0x20017938        0x0
+                0x20017938                . = ALIGN (0x4)
+                0x20017938                _bss_start = .
+ *(.bss)
+ .bss           0x20017938        0x0 ./build/obj/_unit.o
+ .bss           0x20017938        0x0 ./build/obj/waveshaper.o
+ *(.bss.*)
+ *(COMMON)
+                0x20017938                . = ALIGN (0x4)
+                0x20017938                _bss_end = .
+
+.ARM.extab      0x20017938        0x0
+                0x20017938                . = ALIGN (0x4)
+                0x20017938                __extab_start = .
+ *(.ARM.extab* .gnu.linkonce.armextab.*)
+                0x20017938                . = ALIGN (0x4)
+                0x20017938                __extab_end = .
+
+.ARM.exidx      0x20017938        0x0
+                0x20017938                __exidx_start = .
+ *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+                0x20017938                __exidx_end = .
+
+.eh_frame_hdr   0x20017938        0x0
+                0x20017938                . = ALIGN (0x4)
+                0x20017938                _eh_frame_hdr_start = .
+ *(.eh_frame_hdr)
+                0x20017938                . = ALIGN (0x4)
+                0x20017938                _eh_frame_hdr_end = .
+
+.eh_frame       0x20017938        0x0
+                0x20017938                . = ALIGN (0x4)
+                0x20017938                _eh_frame_start = .
+ *(.eh_frame)
+                0x20017938                . = ALIGN (0x4)
+                0x20017938                _eh_frame_end = .
+
+.sdram          0xc0400000        0x0
+                0xc0400000                . = ALIGN (0x4)
+                0xc0400000                _usr_sdram_start = .
+ *(.sdram*)
+                0xc0400000                . = ALIGN (0x4)
+                0xc0400000                _usr_sdram_end = .
+LOAD ./ld/main_api.syms
+                0x0807b000                k_fx_api_version = 0x807b000
+                0x0807b004                k_fx_api_platform = 0x807b004
+                0x0807b100                sqrtm2log_lut_f = 0x807b100
+                0x0807b504                tanpi_lut_f = 0x807b504
+                0x0807b908                log_lut_f = 0x807b908
+                0x0807bd0c                bitres_lut_f = 0x807bd0c
+                0x0807bf10                wt_sine_lut_f = 0x807bf10
+                0x0807c114                schetzen_lut_f = 0x807c114
+                0x0807c318                cubicsat_lut_f = 0x807c318
+                0x0807c51c                pow2_lut_f = 0x807c51c
+                0x0807c920                _fx_mcu_hash = 0x807c920
+                0x0807c92c                _fx_rand = 0x807c92c
+                0x0807c964                _fx_white = 0x807c964
+                0x0807ca88                _fx_get_bpm = 0x807ca88
+                0x0807ca8c                _fx_get_bpmf = 0x807ca8c
+LOAD c:/users/bradl/desktop/code projects/dsp resources/logue-sdk/tools/gcc/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/fpu\libm.a
+START GROUP
+LOAD c:/users/bradl/desktop/code projects/dsp resources/logue-sdk/tools/gcc/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/armv7e-m/fpu\libgcc.a
+LOAD c:/users/bradl/desktop/code projects/dsp resources/logue-sdk/tools/gcc/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/fpu\libg.a
+LOAD c:/users/bradl/desktop/code projects/dsp resources/logue-sdk/tools/gcc/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/gcc/arm-none-eabi/5.4.1/../../../../arm-none-eabi/lib/armv7e-m/fpu\libc.a
+END GROUP
+OUTPUT(build/bradfx.elf elf32-littlearm)
+
+.debug_info     0x00000000      0x9c5
+ .debug_info    0x00000000      0x55d ./build/obj/_unit.o
+ .debug_info    0x0000055d      0x468 ./build/obj/waveshaper.o
+
+.debug_abbrev   0x00000000      0x393
+ .debug_abbrev  0x00000000      0x1f4 ./build/obj/_unit.o
+ .debug_abbrev  0x000001f4      0x19f ./build/obj/waveshaper.o
+
+.debug_loc      0x00000000      0x20c
+ .debug_loc     0x00000000       0xb9 ./build/obj/_unit.o
+ .debug_loc     0x000000b9      0x153 ./build/obj/waveshaper.o
+
+.debug_aranges  0x00000000       0x40
+ .debug_aranges
+                0x00000000       0x20 ./build/obj/_unit.o
+ .debug_aranges
+                0x00000020       0x20 ./build/obj/waveshaper.o
+
+.debug_line     0x00000000      0x417
+ .debug_line    0x00000000      0x241 ./build/obj/_unit.o
+ .debug_line    0x00000241      0x1d6 ./build/obj/waveshaper.o
+
+.debug_str      0x00000000      0x767
+ .debug_str     0x00000000      0x567 ./build/obj/_unit.o
+                                0x5da (size before relaxing)
+ .debug_str     0x00000567      0x200 ./build/obj/waveshaper.o
+                                0x417 (size before relaxing)
+
+.comment        0x00000000       0x6e
+ .comment       0x00000000       0x6e ./build/obj/_unit.o
+                                 0x6f (size before relaxing)
+ .comment       0x0000006e       0x6f ./build/obj/waveshaper.o
+
+.ARM.attributes
+                0x00000000       0x39
+ .ARM.attributes
+                0x00000000       0x39 ./build/obj/_unit.o
+ .ARM.attributes
+                0x00000039       0x39 ./build/obj/waveshaper.o
+
+.debug_frame    0x00000000       0xc8
+ .debug_frame   0x00000000       0x88 ./build/obj/_unit.o
+ .debug_frame   0x00000088       0x40 ./build/obj/waveshaper.o
+
+.debug_ranges   0x00000000       0x40
+ .debug_ranges  0x00000000       0x40 ./build/obj/waveshaper.o
+
+Cross Reference Table
+
+Symbol                                            File
+__init_array_end                                  ./build/obj/_unit.o
+__init_array_start                                ./build/obj/_unit.o
+_bss_end                                          ./build/obj/_unit.o
+_bss_start                                        ./build/obj/_unit.o
+_entry                                            ./build/obj/_unit.o
+_hook_init                                        ./build/obj/waveshaper.o
+                                                  ./build/obj/_unit.o
+_hook_param                                       ./build/obj/waveshaper.o
+                                                  ./build/obj/_unit.o
+_hook_process                                     ./build/obj/waveshaper.o
+                                                  ./build/obj/_unit.o
+_hook_resume                                      ./build/obj/_unit.o
+_hook_suspend                                     ./build/obj/_unit.o
