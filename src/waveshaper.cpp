@@ -3,11 +3,12 @@
 #include <usermodfx.h>
 #include "fx_api.h"
 
-// Initializing entry values
+// Initializing Params //
 static float distamt = 0.5f;
 static float wet = 0.5f;
 
-// Simple waveshaping algorithm from 
+// Simple waveshaping algorithm //
+// x' = 3/2x - 1/2(x^3)
 // https://www.musicdsp.org/en/latest/Effects/114-waveshaper-simple-description.html
 float __fast_inline waveshape(float in) 
 {
@@ -26,6 +27,7 @@ void MODFX_PROCESS(const float *xn, float *yn,
                    uint32_t frames)
 {
   float base_main;
+  float wet_signal;
 
   // Effect processing loop //
   // For double frames (AKA samples cause each frame = sample pair)
@@ -35,7 +37,8 @@ void MODFX_PROCESS(const float *xn, float *yn,
 
     // Waveshaping algorithm // 
     // DRY + WET
-    base_main = xn_cur + (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
+    wet_signal = (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
+    base_main = xn_cur + wet_signal;
     *yn++ = waveshape(base_main);
   }
 }
@@ -49,11 +52,11 @@ void MODFX_PARAM(uint8_t index, int32_t value)
   {
     case 0:
       distamt = valf;
-    break;
-  case 1:
+      break;
+    case 1:
       wet = valf;
-    break;
-  default:
-    break;
+      break;
+    default:
+      break;
   }
 }

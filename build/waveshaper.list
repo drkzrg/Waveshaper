@@ -44,8 +44,8 @@ Disassembly of section .text:
 20017882:	f000 f80b 	bl	2001789c <_hook_init>
 20017886:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
 2001788a:	bf00      	nop
-2001788c:	20017927 	.word	0x20017927
-20017890:	20017927 	.word	0x20017927
+2001788c:	2001793f 	.word	0x2001793f
+20017890:	2001793f 	.word	0x2001793f
 20017894:	20017840 	.word	0x20017840
 20017898:	20017840 	.word	0x20017840
 
@@ -59,107 +59,157 @@ void MODFX_INIT(uint32_t platform, uint32_t api)
 2001789c:	4770      	bx	lr
 
 2001789e <_hook_process>:
+// Main DSP Process Block //
+// Sub values to be ignored, only used for prologue
+void MODFX_PROCESS(const float *xn, float *yn,
+                   const float *sub_xn, float *sub_yn,
+                   uint32_t frames)
+{
+2001789e:	b510      	push	{r4, lr}
+200178a0:	9b02      	ldr	r3, [sp, #8]
+  // Effect processing loop //
+  // For double frames (AKA samples cause each frame = sample pair)
+  for (int i=0;i<frames*2;i++)
   {
     float xn_cur = *xn++;
-
+    wet_signal = (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
+200178a2:	4a1b      	ldr	r2, [pc, #108]	; (20017910 <_hook_process+0x72>)
+    base_main = xn_cur + wet_signal;
     // Waveshaping algorithm // 
     // DRY + WET
-    base_main = xn_cur + (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
-2001789e:	4b15      	ldr	r3, [pc, #84]	; (200178f4 <_hook_process+0x56>)
-200178a0:	ed93 4a00 	vldr	s8, [r3]
-200178a4:	edd3 5a01 	vldr	s11, [r3, #4]
-200178a8:	9b00      	ldr	r3, [sp, #0]
-200178aa:	eef2 4a04 	vmov.f32	s9, #36	; 0x41200000  10.0
-200178ae:	005a      	lsls	r2, r3, #1
-200178b0:	eeb7 5a00 	vmov.f32	s10, #112	; 0x3f800000  1.0
-{
-  float base_main;
-
+    if (counter < frames / 2) {
+200178a4:	085c      	lsrs	r4, r3, #1
   // Effect processing loop //
   // For double frames (AKA samples cause each frame = sample pair)
   for (int i=0;i<frames*2;i++)
-200178b4:	2300      	movs	r3, #0
-    float xn_cur = *xn++;
-
-    // Waveshaping algorithm // 
-    // DRY + WET
-    base_main = xn_cur + (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
-    *yn++ = waveshape(base_main);
-200178b6:	eeb6 6a00 	vmov.f32	s12, #96	; 0x3f000000  0.5
-200178ba:	eef7 6a08 	vmov.f32	s13, #120	; 0x3fc00000  1.5
-{
-  float base_main;
-
-  // Effect processing loop //
-  // For double frames (AKA samples cause each frame = sample pair)
-  for (int i=0;i<frames*2;i++)
-200178be:	4293      	cmp	r3, r2
-200178c0:	d017      	beq.n	200178f2 <_hook_process+0x54>
   {
     float xn_cur = *xn++;
-
-    // Waveshaping algorithm // 
-    // DRY + WET
-    base_main = xn_cur + (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
-200178c2:	eeb0 7a45 	vmov.f32	s14, s10
-200178c6:	eea4 7a24 	vfma.f32	s14, s8, s9
+    wet_signal = (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
+200178a6:	edd2 6a00 	vldr	s13, [r2]
+200178aa:	ed92 6a01 	vldr	s12, [r2, #4]
+200178ae:	3104      	adds	r1, #4
+200178b0:	005a      	lsls	r2, r3, #1
+    base_main = xn_cur + wet_signal;
+200178b2:	eef2 5a04 	vmov.f32	s11, #36	; 0x41200000  10.0
+                   const float *sub_xn, float *sub_yn,
+                   uint32_t frames)
 {
   float base_main;
-
-  // Effect processing loop //
+  float wet_signal;
+  int counter = 0;
+200178b6:	2300      	movs	r3, #0
   // For double frames (AKA samples cause each frame = sample pair)
   for (int i=0;i<frames*2;i++)
-200178ca:	3301      	adds	r3, #1
   {
     float xn_cur = *xn++;
-200178cc:	ecf0 7a01 	vldmia	r0!, {s15}
-
+    wet_signal = (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
+    base_main = xn_cur + wet_signal;
+200178b8:	eeb7 5a00 	vmov.f32	s10, #112	; 0x3f800000  1.0
     // Waveshaping algorithm // 
     // DRY + WET
-    base_main = xn_cur + (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
-200178d0:	eef0 3a67 	vmov.f32	s7, s15
-200178d4:	eed7 3a87 	vfnms.f32	s7, s15, s14
-200178d8:	eee3 7aa5 	vfma.f32	s15, s7, s11
-    *yn++ = waveshape(base_main);
-200178dc:	ee27 7aa7 	vmul.f32	s14, s15, s15
-200178e0:	ee27 7a27 	vmul.f32	s14, s14, s15
-200178e4:	ee26 7a47 	vnmul.f32	s14, s12, s14
-200178e8:	eea7 7aa6 	vfma.f32	s14, s15, s13
-200178ec:	eca1 7a01 	vstmia	r1!, {s14}
-{
-  float base_main;
+    if (counter < frames / 2) {
 
+
+      *yn++ = waveshape(base_main);
+200178bc:	eef6 4a00 	vmov.f32	s9, #96	; 0x3f000000  0.5
+200178c0:	eeb7 4a08 	vmov.f32	s8, #120	; 0x3fc00000  1.5
+  float base_main;
+  float wet_signal;
+  int counter = 0;
   // Effect processing loop //
   // For double frames (AKA samples cause each frame = sample pair)
   for (int i=0;i<frames*2;i++)
-200178f0:	e7e5      	b.n	200178be <_hook_process+0x20>
-200178f2:	4770      	bx	lr
-200178f4:	20017920 	.word	0x20017920
+200178c4:	4293      	cmp	r3, r2
+200178c6:	d021      	beq.n	2001790c <_hook_process+0x6e>
+  {
+    float xn_cur = *xn++;
+    wet_signal = (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
+    base_main = xn_cur + wet_signal;
+200178c8:	eeb0 7a45 	vmov.f32	s14, s10
+200178cc:	eea6 7aa5 	vfma.f32	s14, s13, s11
+    // Waveshaping algorithm // 
+    // DRY + WET
+    if (counter < frames / 2) {
+200178d0:	429c      	cmp	r4, r3
+200178d2:	f101 0104 	add.w	r1, r1, #4
+  int counter = 0;
+  // Effect processing loop //
+  // For double frames (AKA samples cause each frame = sample pair)
+  for (int i=0;i<frames*2;i++)
+  {
+    float xn_cur = *xn++;
+200178d6:	ecf0 7a01 	vldmia	r0!, {s15}
+    wet_signal = (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
+    base_main = xn_cur + wet_signal;
+200178da:	eef0 3a67 	vmov.f32	s7, s15
+200178de:	eed7 3a87 	vfnms.f32	s7, s15, s14
+      *yn++ = waveshape(base_main);
+    }
+    else{
+      *yn++ = base_main;
+    }
+    counter++;
+200178e2:	f103 0301 	add.w	r3, r3, #1
+  // For double frames (AKA samples cause each frame = sample pair)
+  for (int i=0;i<frames*2;i++)
+  {
+    float xn_cur = *xn++;
+    wet_signal = (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
+    base_main = xn_cur + wet_signal;
+200178e6:	eee3 7a86 	vfma.f32	s15, s7, s12
+200178ea:	eeb0 7a63 	vmov.f32	s14, s7
+    // Waveshaping algorithm // 
+    // DRY + WET
+    if (counter < frames / 2) {
 
-200178f8 <_hook_param>:
+
+      *yn++ = waveshape(base_main);
+200178ee:	bf81      	itttt	hi
+200178f0:	ee27 7aa7 	vmulhi.f32	s14, s15, s15
+200178f4:	ee27 7a27 	vmulhi.f32	s14, s14, s15
+200178f8:	ee24 7ac7 	vnmulhi.f32	s14, s9, s14
+200178fc:	eea7 7a84 	vfmahi.f32	s14, s15, s8
+20017900:	bf88      	it	hi
+20017902:	eef0 7a47 	vmovhi.f32	s15, s14
+    }
+    else{
+      *yn++ = base_main;
+20017906:	ed41 7a02 	vstr	s15, [r1, #-8]
+  float base_main;
+  float wet_signal;
+  int counter = 0;
+  // Effect processing loop //
+  // For double frames (AKA samples cause each frame = sample pair)
+  for (int i=0;i<frames*2;i++)
+2001790a:	e7db      	b.n	200178c4 <_hook_process+0x26>
+2001790c:	bd10      	pop	{r4, pc}
+2001790e:	bf00      	nop
+20017910:	20017938 	.word	0x20017938
+
+20017914 <_hook_param>:
 
 // Param Controls //
 void MODFX_PARAM(uint8_t index, int32_t value)
 {
   //Convert fixed-point q31 format to float
   const float valf = q31_to_f32(value);
-200178f8:	ee07 1a90 	vmov	s15, r1
-200178fc:	eefa 7ae0 	vcvt.f32.s32	s15, s15, #31
+20017914:	ee07 1a90 	vmov	s15, r1
+20017918:	eefa 7ae0 	vcvt.f32.s32	s15, s15, #31
   switch (index)
-20017900:	b110      	cbz	r0, 20017908 <_hook_param+0x10>
-20017902:	2801      	cmp	r0, #1
-20017904:	d004      	beq.n	20017910 <_hook_param+0x18>
-20017906:	4770      	bx	lr
+2001791c:	b110      	cbz	r0, 20017924 <_hook_param+0x10>
+2001791e:	2801      	cmp	r0, #1
+20017920:	d004      	beq.n	2001792c <_hook_param+0x18>
+20017922:	4770      	bx	lr
   {
     case 0:
       distamt = valf;
-20017908:	4b03      	ldr	r3, [pc, #12]	; (20017918 <_hook_param+0x20>)
-2001790a:	edc3 7a00 	vstr	s15, [r3]
+20017924:	4b03      	ldr	r3, [pc, #12]	; (20017934 <_hook_param+0x20>)
+20017926:	edc3 7a00 	vstr	s15, [r3]
     break;
-2001790e:	4770      	bx	lr
+2001792a:	4770      	bx	lr
   case 1:
       wet = valf;
-20017910:	4b01      	ldr	r3, [pc, #4]	; (20017918 <_hook_param+0x20>)
-20017912:	edc3 7a01 	vstr	s15, [r3, #4]
-20017916:	4770      	bx	lr
-20017918:	20017920 	.word	0x20017920
+2001792c:	4b01      	ldr	r3, [pc, #4]	; (20017934 <_hook_param+0x20>)
+2001792e:	edc3 7a01 	vstr	s15, [r3, #4]
+20017932:	4770      	bx	lr
+20017934:	20017938 	.word	0x20017938
