@@ -44,8 +44,8 @@ Disassembly of section .text:
 20017882:	f000 f80b 	bl	2001789c <_hook_init>
 20017886:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
 2001788a:	bf00      	nop
-2001788c:	2001791f 	.word	0x2001791f
-20017890:	2001791f 	.word	0x2001791f
+2001788c:	2001792f 	.word	0x2001792f
+20017890:	2001792f 	.word	0x2001792f
 20017894:	20017840 	.word	0x20017840
 20017898:	20017840 	.word	0x20017840
 
@@ -61,7 +61,7 @@ void MODFX_INIT(uint32_t platform, uint32_t api)
 200178a2:	601a      	str	r2, [r3, #0]
 200178a4:	4770      	bx	lr
 200178a6:	bf00      	nop
-200178a8:	20017918 	.word	0x20017918
+200178a8:	20017928 	.word	0x20017928
 
 200178ac <_hook_process>:
 
@@ -69,86 +69,95 @@ void MODFX_INIT(uint32_t platform, uint32_t api)
  for (int i=0;i<frames*2;i++)
   {
     // Waveshaping algorithm
-    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
-200178ac:	4b12      	ldr	r3, [pc, #72]	; (200178f8 <_hook_process+0x4c>)
-200178ae:	edd3 4a00 	vldr	s9, [r3]
-200178b2:	9b00      	ldr	r3, [sp, #0]
-200178b4:	eeb2 5a04 	vmov.f32	s10, #36	; 0x41200000  10.0
-200178b8:	005a      	lsls	r2, r3, #1
-200178ba:	eef7 5a00 	vmov.f32	s11, #112	; 0x3f800000  1.0
+    base_main = *(xn++) * input_gain * ((distamt * 10.0f) + 1.f);
+200178ac:	4b14      	ldr	r3, [pc, #80]	; (20017900 <_hook_process+0x54>)
+200178ae:	ed93 4a01 	vldr	s8, [r3, #4]
+200178b2:	edd3 4a00 	vldr	s9, [r3]
+200178b6:	9b00      	ldr	r3, [sp, #0]
+200178b8:	eeb2 5a04 	vmov.f32	s10, #36	; 0x41200000  10.0
+200178bc:	005a      	lsls	r2, r3, #1
+200178be:	eef7 5a00 	vmov.f32	s11, #112	; 0x3f800000  1.0
  
  float base_main;
  const float *main_yn_e = yn + 2 * frames;
 
 // For double frames (AKA samples cause each frame = sample pair)
  for (int i=0;i<frames*2;i++)
-200178be:	2300      	movs	r3, #0
+200178c2:	2300      	movs	r3, #0
   {
     // Waveshaping algorithm
-    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
+    base_main = *(xn++) * input_gain * ((distamt * 10.0f) + 1.f);
     *yn++ = waveshape(base_main);
-200178c0:	eeb6 6a00 	vmov.f32	s12, #96	; 0x3f000000  0.5
-200178c4:	eef7 6a08 	vmov.f32	s13, #120	; 0x3fc00000  1.5
+200178c4:	eeb6 6a00 	vmov.f32	s12, #96	; 0x3f000000  0.5
+200178c8:	eef7 6a08 	vmov.f32	s13, #120	; 0x3fc00000  1.5
  
  float base_main;
  const float *main_yn_e = yn + 2 * frames;
 
 // For double frames (AKA samples cause each frame = sample pair)
  for (int i=0;i<frames*2;i++)
-200178c8:	4293      	cmp	r3, r2
-200178ca:	d013      	beq.n	200178f4 <_hook_process+0x48>
+200178cc:	4293      	cmp	r3, r2
+200178ce:	d015      	beq.n	200178fc <_hook_process+0x50>
   {
     // Waveshaping algorithm
-    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
-200178cc:	eef0 7a65 	vmov.f32	s15, s11
-200178d0:	eee4 7a85 	vfma.f32	s15, s9, s10
+    base_main = *(xn++) * input_gain * ((distamt * 10.0f) + 1.f);
+200178d0:	eeb0 7a65 	vmov.f32	s14, s11
+200178d4:	ecf0 7a01 	vldmia	r0!, {s15}
+200178d8:	eea4 7a85 	vfma.f32	s14, s9, s10
  
  float base_main;
  const float *main_yn_e = yn + 2 * frames;
 
 // For double frames (AKA samples cause each frame = sample pair)
  for (int i=0;i<frames*2;i++)
-200178d4:	3301      	adds	r3, #1
+200178dc:	3301      	adds	r3, #1
   {
     // Waveshaping algorithm
-    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
-200178d6:	ecb0 7a01 	vldmia	r0!, {s14}
-200178da:	ee67 7a87 	vmul.f32	s15, s15, s14
+    base_main = *(xn++) * input_gain * ((distamt * 10.0f) + 1.f);
+200178de:	ee64 7a27 	vmul.f32	s15, s8, s15
+200178e2:	ee67 7a87 	vmul.f32	s15, s15, s14
     *yn++ = waveshape(base_main);
-200178de:	ee27 7aa7 	vmul.f32	s14, s15, s15
-200178e2:	ee27 7a27 	vmul.f32	s14, s14, s15
-200178e6:	ee26 7a47 	vnmul.f32	s14, s12, s14
-200178ea:	eea7 7aa6 	vfma.f32	s14, s15, s13
-200178ee:	eca1 7a01 	vstmia	r1!, {s14}
+200178e6:	ee27 7aa7 	vmul.f32	s14, s15, s15
+200178ea:	ee27 7a27 	vmul.f32	s14, s14, s15
+200178ee:	ee26 7a47 	vnmul.f32	s14, s12, s14
+200178f2:	eea7 7aa6 	vfma.f32	s14, s15, s13
+200178f6:	eca1 7a01 	vstmia	r1!, {s14}
  
  float base_main;
  const float *main_yn_e = yn + 2 * frames;
 
 // For double frames (AKA samples cause each frame = sample pair)
  for (int i=0;i<frames*2;i++)
-200178f2:	e7e9      	b.n	200178c8 <_hook_process+0x1c>
-200178f4:	4770      	bx	lr
-200178f6:	bf00      	nop
-200178f8:	20017918 	.word	0x20017918
+200178fa:	e7e7      	b.n	200178cc <_hook_process+0x20>
+200178fc:	4770      	bx	lr
+200178fe:	bf00      	nop
+20017900:	20017928 	.word	0x20017928
 
-200178fc <_hook_param>:
-    *yn++ = waveshape(base_main);
-  }
+20017904 <_hook_param>:
 }
 
 void MODFX_PARAM(uint8_t index, int32_t value)
 {
-200178fc:	ee07 1a90 	vmov	s15, r1
   //Convert fixed-point q31 format to float
   const float valf = q31_to_f32(value);
+20017904:	ee07 1a90 	vmov	s15, r1
+20017908:	eefa 7ae0 	vcvt.f32.s32	s15, s15, #31
   switch (index)
-20017900:	b920      	cbnz	r0, 2001790c <_hook_param+0x10>
+2001790c:	b110      	cbz	r0, 20017914 <_hook_param+0x10>
+2001790e:	2801      	cmp	r0, #1
+20017910:	d004      	beq.n	2001791c <_hook_param+0x18>
+20017912:	4770      	bx	lr
   {
     case 0:
       distamt = valf;
-20017902:	eefa 7ae0 	vcvt.f32.s32	s15, s15, #31
-20017906:	4b02      	ldr	r3, [pc, #8]	; (20017910 <_hook_param+0x14>)
-20017908:	edc3 7a00 	vstr	s15, [r3]
-2001790c:	4770      	bx	lr
-2001790e:	bf00      	nop
-20017910:	20017918 	.word	0x20017918
+20017914:	4b03      	ldr	r3, [pc, #12]	; (20017924 <_hook_param+0x20>)
+20017916:	edc3 7a00 	vstr	s15, [r3]
+    break;
+2001791a:	4770      	bx	lr
+  //timeAssign a value to rate when turning the knob
+  case 1:
+      input_gain = valf;
+2001791c:	4b01      	ldr	r3, [pc, #4]	; (20017924 <_hook_param+0x20>)
+2001791e:	edc3 7a01 	vstr	s15, [r3, #4]
+20017922:	4770      	bx	lr
+20017924:	20017928 	.word	0x20017928

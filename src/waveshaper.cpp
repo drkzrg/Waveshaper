@@ -3,6 +3,7 @@
 #define 	M_PI   3.141592653589793f
 
 static float distamt = 0.5f;
+static float input_gain = 0.5f;
 
 float __fast_inline waveshape(float in) {
     return 1.5f * in - 0.5f * in *in * in;
@@ -26,7 +27,7 @@ void MODFX_PROCESS(const float *xn, float *yn,
  for (int i=0;i<frames*2;i++)
   {
     // Waveshaping algorithm
-    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
+    base_main = *(xn++) * input_gain * ((distamt * 10.0f) + 1.f);
     *yn++ = waveshape(base_main);
   }
 }
@@ -42,6 +43,7 @@ void MODFX_PARAM(uint8_t index, int32_t value)
     break;
   //timeAssign a value to rate when turning the knob
   case 1:
+      input_gain = valf;
     break;
   default:
     break;
