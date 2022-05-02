@@ -1,37 +1,46 @@
+// Created by Bradly Landucci
+
 #include <usermodfx.h>
 #include "fx_api.h"
-#define 	M_PI   3.141592653589793f
 
+// Initializing entry values
 static float distamt = 0.5f;
-static float input_gain = 0.5f;
+static float wet = 0.5f;
 
-float __fast_inline waveshape(float in) {
+// Simple waveshaping algorithm from 
+// https://www.musicdsp.org/en/latest/Effects/114-waveshaper-simple-description.html
+float __fast_inline waveshape(float in) 
+{
     return 1.5f * in - 0.5f * in *in * in;
 }
 
+// Initializing Platform //
 void MODFX_INIT(uint32_t platform, uint32_t api)
 {
-    distamt = 1.f;
 }
 
+// Main DSP Process Block //
+// Sub values to be ignored, only used for prologue
 void MODFX_PROCESS(const float *xn, float *yn,
                    const float *sub_xn, float *sub_yn,
                    uint32_t frames)
 {
-  // Effect processing loop
- 
- float base_main;
- const float *main_yn_e = yn + 2 * frames;
+  float base_main;
 
-// For double frames (AKA samples cause each frame = sample pair)
- for (int i=0;i<frames*2;i++)
+  // Effect processing loop //
+  // For double frames (AKA samples cause each frame = sample pair)
+  for (int i=0;i<frames*2;i++)
   {
-    // Waveshaping algorithm
-    base_main = *(xn++) * input_gain * ((distamt * 10.0f) + 1.f);
+    float xn_cur = *xn++;
+
+    // Waveshaping algorithm // 
+    // DRY + WET
+    base_main = xn_cur + (wet * ((xn_cur * ((distamt * 10.0f) + 1.f)) - xn_cur));
     *yn++ = waveshape(base_main);
   }
 }
 
+// Param Controls //
 void MODFX_PARAM(uint8_t index, int32_t value)
 {
   //Convert fixed-point q31 format to float
@@ -41,9 +50,8 @@ void MODFX_PARAM(uint8_t index, int32_t value)
     case 0:
       distamt = valf;
     break;
-  //timeAssign a value to rate when turning the knob
   case 1:
-      input_gain = valf;
+      wet = valf;
     break;
   default:
     break;
