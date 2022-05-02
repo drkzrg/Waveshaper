@@ -44,13 +44,13 @@ Disassembly of section .text:
 20017882:	f000 f80b 	bl	2001789c <_hook_init>
 20017886:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
 2001788a:	bf00      	nop
-2001788c:	20017937 	.word	0x20017937
-20017890:	20017937 	.word	0x20017937
+2001788c:	2001791f 	.word	0x2001791f
+20017890:	2001791f 	.word	0x2001791f
 20017894:	20017840 	.word	0x20017840
 20017898:	20017840 	.word	0x20017840
 
 2001789c <_hook_init>:
-    return clipminmaxf(-lim, x, lim);
+    return 1.5f * in - 0.5f * in *in * in;
 }
 
 void MODFX_INIT(uint32_t platform, uint32_t api)
@@ -61,110 +61,94 @@ void MODFX_INIT(uint32_t platform, uint32_t api)
 200178a2:	601a      	str	r2, [r3, #0]
 200178a4:	4770      	bx	lr
 200178a6:	bf00      	nop
-200178a8:	20017930 	.word	0x20017930
+200178a8:	20017918 	.word	0x20017918
 
 200178ac <_hook_process>:
- const float *main_yn_e = yn + 2 * frames;
 
- for (; yn < main_yn_e;)
+// For double frames (AKA samples cause each frame = sample pair)
+ for (int i=0;i<frames*2;i++)
   {
-    // Distortion algorithm
+    // Waveshaping algorithm
     base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
-200178ac:	4a17      	ldr	r2, [pc, #92]	; (2001790c <_hook_process+0x60>)
-                   uint32_t frames)
-{
-  // Effect processing loop
- 
- float base_main;
- const float *main_yn_e = yn + 2 * frames;
-200178ae:	9b00      	ldr	r3, [sp, #0]
-
-/** FSEL construct
- */
-static inline __attribute__((optimize("Ofast"),always_inline))
-float fsel(const float a, const float b, const float c) {
-  return (a >= 0) ? b : c;
-200178b0:	ed9f 7a17 	vldr	s14, [pc, #92]	; 20017910 <_hook_process+0x64>
-
- for (; yn < main_yn_e;)
-  {
-    // Distortion algorithm
-    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
-200178b4:	ed92 4a00 	vldr	s8, [r2]
-200178b8:	eddf 5a16 	vldr	s11, [pc, #88]	; 20017914 <_hook_process+0x68>
-                   uint32_t frames)
-{
-  // Effect processing loop
- 
- float base_main;
- const float *main_yn_e = yn + 2 * frames;
-200178bc:	eb01 03c3 	add.w	r3, r1, r3, lsl #3
-
- for (; yn < main_yn_e;)
-  {
-    // Distortion algorithm
-    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
-200178c0:	eef2 4a04 	vmov.f32	s9, #36	; 0x41200000  10.0
-200178c4:	eeb7 5a00 	vmov.f32	s10, #112	; 0x3f800000  1.0
-200178c8:	eeb0 6a47 	vmov.f32	s12, s14
-  // Effect processing loop
+200178ac:	4b12      	ldr	r3, [pc, #72]	; (200178f8 <_hook_process+0x4c>)
+200178ae:	edd3 4a00 	vldr	s9, [r3]
+200178b2:	9b00      	ldr	r3, [sp, #0]
+200178b4:	eeb2 5a04 	vmov.f32	s10, #36	; 0x41200000  10.0
+200178b8:	005a      	lsls	r2, r3, #1
+200178ba:	eef7 5a00 	vmov.f32	s11, #112	; 0x3f800000  1.0
  
  float base_main;
  const float *main_yn_e = yn + 2 * frames;
 
- for (; yn < main_yn_e;)
-200178cc:	428b      	cmp	r3, r1
-200178ce:	d91c      	bls.n	2001790a <_hook_process+0x5e>
+// For double frames (AKA samples cause each frame = sample pair)
+ for (int i=0;i<frames*2;i++)
+200178be:	2300      	movs	r3, #0
   {
-    // Distortion algorithm
+    // Waveshaping algorithm
     base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
-200178d0:	eef0 7a45 	vmov.f32	s15, s10
-200178d4:	eee4 7a24 	vfma.f32	s15, s8, s9
-200178d8:	ecf0 6a01 	vldmia	r0!, {s13}
-200178dc:	ee67 7aa6 	vmul.f32	s15, s15, s13
-200178e0:	ee77 6a87 	vadd.f32	s13, s15, s14
-200178e4:	eef5 6ac0 	vcmpe.f32	s13, #0.0
-200178e8:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
-200178ec:	bfb8      	it	lt
-200178ee:	eef0 7a65 	vmovlt.f32	s15, s11
-200178f2:	ee77 6ac6 	vsub.f32	s13, s15, s12
-200178f6:	eef5 6a40 	vcmp.f32	s13, #0.0
-200178fa:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
-200178fe:	bfa8      	it	ge
-20017900:	eef0 7a47 	vmovge.f32	s15, s14
-
-    *yn++ = hardclip(base_main, 0.15f);
-20017904:	ece1 7a01 	vstmia	r1!, {s15}
-  // Effect processing loop
+    *yn++ = waveshape(base_main);
+200178c0:	eeb6 6a00 	vmov.f32	s12, #96	; 0x3f000000  0.5
+200178c4:	eef7 6a08 	vmov.f32	s13, #120	; 0x3fc00000  1.5
  
  float base_main;
  const float *main_yn_e = yn + 2 * frames;
 
- for (; yn < main_yn_e;)
-20017908:	e7e0      	b.n	200178cc <_hook_process+0x20>
-2001790a:	4770      	bx	lr
-2001790c:	20017930 	.word	0x20017930
-20017910:	3e19999a 	.word	0x3e19999a
-20017914:	be19999a 	.word	0xbe19999a
+// For double frames (AKA samples cause each frame = sample pair)
+ for (int i=0;i<frames*2;i++)
+200178c8:	4293      	cmp	r3, r2
+200178ca:	d013      	beq.n	200178f4 <_hook_process+0x48>
+  {
+    // Waveshaping algorithm
+    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
+200178cc:	eef0 7a65 	vmov.f32	s15, s11
+200178d0:	eee4 7a85 	vfma.f32	s15, s9, s10
+ 
+ float base_main;
+ const float *main_yn_e = yn + 2 * frames;
 
-20017918 <_hook_param>:
-    *yn++ = hardclip(base_main, 0.15f);
+// For double frames (AKA samples cause each frame = sample pair)
+ for (int i=0;i<frames*2;i++)
+200178d4:	3301      	adds	r3, #1
+  {
+    // Waveshaping algorithm
+    base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
+200178d6:	ecb0 7a01 	vldmia	r0!, {s14}
+200178da:	ee67 7a87 	vmul.f32	s15, s15, s14
+    *yn++ = waveshape(base_main);
+200178de:	ee27 7aa7 	vmul.f32	s14, s15, s15
+200178e2:	ee27 7a27 	vmul.f32	s14, s14, s15
+200178e6:	ee26 7a47 	vnmul.f32	s14, s12, s14
+200178ea:	eea7 7aa6 	vfma.f32	s14, s15, s13
+200178ee:	eca1 7a01 	vstmia	r1!, {s14}
+ 
+ float base_main;
+ const float *main_yn_e = yn + 2 * frames;
+
+// For double frames (AKA samples cause each frame = sample pair)
+ for (int i=0;i<frames*2;i++)
+200178f2:	e7e9      	b.n	200178c8 <_hook_process+0x1c>
+200178f4:	4770      	bx	lr
+200178f6:	bf00      	nop
+200178f8:	20017918 	.word	0x20017918
+
+200178fc <_hook_param>:
+    *yn++ = waveshape(base_main);
   }
 }
 
 void MODFX_PARAM(uint8_t index, int32_t value)
 {
-20017918:	ee07 1a90 	vmov	s15, r1
+200178fc:	ee07 1a90 	vmov	s15, r1
   //Convert fixed-point q31 format to float
   const float valf = q31_to_f32(value);
   switch (index)
-2001791c:	b920      	cbnz	r0, 20017928 <_hook_param+0x10>
+20017900:	b920      	cbnz	r0, 2001790c <_hook_param+0x10>
   {
     case 0:
       distamt = valf;
-2001791e:	eefa 7ae0 	vcvt.f32.s32	s15, s15, #31
-20017922:	4b02      	ldr	r3, [pc, #8]	; (2001792c <_hook_param+0x14>)
-20017924:	edc3 7a00 	vstr	s15, [r3]
-20017928:	4770      	bx	lr
-2001792a:	bf00      	nop
-2001792c:	20017930 	.word	0x20017930
+20017902:	eefa 7ae0 	vcvt.f32.s32	s15, s15, #31
+20017906:	4b02      	ldr	r3, [pc, #8]	; (20017910 <_hook_param+0x14>)
+20017908:	edc3 7a00 	vstr	s15, [r3]
+2001790c:	4770      	bx	lr
+2001790e:	bf00      	nop
+20017910:	20017918 	.word	0x20017918

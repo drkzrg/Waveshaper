@@ -4,8 +4,8 @@
 
 static float distamt = 0.5f;
 
-float __fast_inline hardclip(float x, float lim) {
-    return clipminmaxf(-lim, x, lim);
+float __fast_inline waveshape(float in) {
+    return 1.5f * in - 0.5f * in *in * in;
 }
 
 void MODFX_INIT(uint32_t platform, uint32_t api)
@@ -22,12 +22,12 @@ void MODFX_PROCESS(const float *xn, float *yn,
  float base_main;
  const float *main_yn_e = yn + 2 * frames;
 
- for (; yn < main_yn_e;)
+// For double frames (AKA samples cause each frame = sample pair)
+ for (int i=0;i<frames*2;i++)
   {
-    // Distortion algorithm
+    // Waveshaping algorithm
     base_main = *(xn++) * ((distamt * 10.0f) + 1.f);
-
-    *yn++ = hardclip(base_main, 0.15f);
+    *yn++ = waveshape(base_main);
   }
 }
 
